@@ -61,6 +61,8 @@ body::before{content:"";position:fixed;top:50%;left:50%;transform:translate(-50%
 .upd-pill.mopen{border-color:var(--green);color:var(--green)}
 .upd-pill.mclosed{border-color:var(--muted);color:var(--muted)}
 .upd-pill.mclosed .dot{animation:none}
+.upd-pill.mafter{border-color:#f59e0b;color:#f59e0b}
+.upd-pill.mafter .dot{background:#f59e0b;animation:pulse 2.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .abtn{background:linear-gradient(135deg,var(--ebv),var(--ebv2));border:none;color:#fff;padding:4px 11px;border-radius:12px;cursor:pointer;font-size:.66rem;font-weight:700;font-family:'DM Sans',sans-serif;transition:all .2s}
 .abtn:hover{transform:translateY(-1px);box-shadow:0 3px 9px rgba(22,163,74,.4)}
@@ -558,7 +560,7 @@ body{padding-bottom:32px}
 </div>
 
 <nav class="tab-nav">
-  <button class="tab-btn on" data-tab="sp500" onclick="switchTab('sp500')">📊 S&P 500</button>
+  <button class="tab-btn on" data-tab="sp500" onclick="switchTab('sp500')">📊 S&P 500 - Setorial</button>
   <button class="tab-btn" data-tab="nasdaq" onclick="switchTab('nasdaq')">💻 Nasdaq 100</button>
   <button class="tab-btn" data-tab="reits" onclick="switchTab('reits')">🏢 REITs</button>
   <button class="tab-btn" data-tab="news" onclick="switchTab('news')">📰 Notícias</button>
@@ -1031,7 +1033,25 @@ function initTheme(){var s=localStorage.getItem("ebv-theme")||"dark";document.do
 
 // MARKET STATUS
 function isMarketOpen(){var et=new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));var d=et.getDay(),m=et.getHours()*60+et.getMinutes();return d>0&&d<6&&m>=570&&m<960;}
-function updateMktStatus(){var p=document.getElementById("mktStatus"),l=document.getElementById("mktLabel"),o=isMarketOpen();p.className="upd-pill "+(o?"mopen":"mclosed");l.textContent=o?"LIVE":"FECHADO";}
+function isAfterHours(){var et=new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));var d=et.getDay(),m=et.getHours()*60+et.getMinutes();return d>0&&d<6&&m>=960&&m<1200;} // 16:00–20:00 ET
+function updateMktStatus(){
+  var p=document.getElementById("mktStatus");
+  if(!p) return;
+  if(isMarketOpen()){
+    p.className="upd-pill mopen";
+    p.innerHTML='<span class="dot"></span>LIVE';
+  } else if(isAfterHours()){
+    var et=new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
+    var closeMin=1200-(et.getHours()*60+et.getMinutes());
+    var h=Math.floor(closeMin/60),m=closeMin%60;
+    var tempo=h>0?(h+'h '+(m<10?'0':'')+m+'min'):(m+'min');
+    p.className="upd-pill mafter";
+    p.innerHTML='<span class="dot"></span>PÓS-MERCADO · fecha em '+tempo;
+  } else {
+    p.className="upd-pill mclosed";
+    p.innerHTML='<span class="dot"></span>FECHADO';
+  }
+}
 
 // TABS
 function switchTab(tab){
@@ -3223,19 +3243,8 @@ function init(){
     }
   },1000);
 
-  // ── Atualiza badge LIVE/FECHADO no mercado ──
-  setInterval(function(){
-    var open=isMarketOpen();
-    var p=document.getElementById("mktStatus");
-    if(!p) return;
-    if(open){
-      p.className="upd-pill mopen";
-      p.innerHTML='<span class="dot"></span>LIVE';
-    } else {
-      p.className="upd-pill mclosed";
-      p.innerHTML='<span class="dot"></span>FECHADO';
-    }
-  },30000);
+  // ── Atualiza badge LIVE/PÓS-MERCADO/FECHADO ──
+  setInterval(updateMktStatus, 30000);
 
   console.log("%c⏱ Auto-refresh: silencioso 60s + completo 5min","color:#60a5fa;font-size:11px");
 }
