@@ -1,0 +1,39 @@
+# ============================================================
+# E.B.V. — Escola Bolsa de Valores
+# netlify.toml — Configuração do deploy
+# ============================================================
+
+[build]
+  publish = "."          # pasta raiz onde está o index.html
+  functions = "functions"
+
+# Redireciona /api/fmp para a função fmp.js
+[[redirects]]
+  from = "/api/fmp"
+  to = "/.netlify/functions/fmp"
+  status = 200
+
+# Redireciona /api/yahoo para o proxy Yahoo Finance
+[[redirects]]
+  from = "/api/yahoo"
+  to = "/.netlify/functions/yahoo_proxy"
+  status = 200
+
+# Headers de segurança
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache para assets estáticos
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
